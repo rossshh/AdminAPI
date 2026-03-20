@@ -1,0 +1,181 @@
+import { useEffect, useState } from "react";
+import { getUsers } from "../services/userService";
+import {
+  Box, Table, TableBody, TableCell, TableContainer, TableRow,
+  Avatar, IconButton, AppBar, Toolbar, Typography, TextField,
+  InputAdornment, Chip, Tooltip,
+} from "@mui/material";
+import {
+  Search as SearchIcon,
+  Visibility as ViewIcon,
+  SwapVert as SortIcon,
+  ArrowUpward as AscIcon,
+  ArrowDownward as DescIcon,
+} from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+
+// Derive category from user data — adjust this to match your actual data shape
+const getCategory = (user) => user.category ?? user.role ?? "General";
+
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const [users, setUsers] = useState([]);
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [sortOrder, setSortOrder] = useState(null); // null | "asc" | "desc"
+
+  useEffect(() => {
+    getUsers().then(setUsers);
+  }, []);
+
+  // Build unique category list from users
+  const categories = ["All", ...new Set(users.map(getCategory))];
+
+  const toggleSort = () => {
+    setSortOrder((prev) =>
+      prev === null ? "asc" : prev === "asc" ? "desc" : null
+    );
+  };
+
+  const filtered = users
+    .filter((u) =>
+      activeCategory === "All" || getCategory(u) === activeCategory
+    )
+    .filter((u) =>
+      search.trim() === "" ||
+      u.name?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sortOrder === "asc") return a.name.localeCompare(b.name);
+      if (sortOrder === "desc") return b.name.localeCompare(a.name);
+      return 0;
+    });
+
+  return (
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5" }}>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6">Admin Panel</Typography>
+        </Toolbar>
+      </AppBar>
+
+      <Box className="p-3 md:ml-50 md:mr-50 md:mt-10">
+
+        {/* Search + Sort row */}
+        <Box className="flex items-center gap-3 mb-4">
+          <TextField
+            size="small"
+            placeholder="Search users…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ flexGrow: 1 }}
+          />
+
+          {/* Sort toggle button */}
+          <Tooltip
+            title={
+              sortOrder === null
+                ? "Sort A → Z"
+                : sortOrder === "asc"
+                ? "Sort Z → A"
+                : "Clear sort"
+            }
+          >
+            <IconButton
+              onClick={toggleSort}
+              color={sortOrder ? "primary" : "default"}
+              sx={{ border: "1px solid", borderColor: sortOrder ? "primary.main" : "divider", borderRadius: 1 }}
+            >
+              {sortOrder === "asc" ? (
+                <AscIcon fontSize="small" />
+              ) : sortOrder === "desc" ? (
+                <DescIcon fontSize="small" />
+              ) : (
+                <SortIcon fontSize="small" />
+              )}
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        {/* Category filter chips */}
+        <Box className="flex flex-wrap gap-2 mb-4">
+          {categories.map((cat) => (
+            <Chip
+              key={cat}
+              label={cat}
+              clickable
+              color={activeCategory === cat ? "primary" : "default"}
+              variant={activeCategory === cat ? "filled" : "outlined"}
+              onClick={() => setActiveCategory(cat)}
+              size="small"
+            />
+          ))}
+        </Box>
+
+        {/* Table */}
+        <TableContainer>
+          <Table>
+            <TableBody>
+              {filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center" sx={{ color: "text.secondary", py: 6 }}>
+                    No users match your filters.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered.map((user) => (
+                  <TableRow
+                    key={user.id}
+                    className="hover cursor-pointer"
+                    onClick={() => navigate(`/user/${user.id}`)}
+                  >
+                    <TableCell>
+                      <Box className="flex align-center gap-2.5 text-lg">
+                        <Avatar className="w-36 h-36 text-xs font-semibold">
+                          {user.name?.[0]}
+                        </Avatar>
+                        {user.name}
+                      </Box>
+                    </TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.phone}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={getCategory(user)}
+                        size="small"
+                        variant="outlined"
+                        sx={{ fontSize: "0.7rem" }}
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/user/${user.id}`);
+                        }}
+                      >
+                        <ViewIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+    </Box>
+  );
+};
+
+export default Dashboard;
