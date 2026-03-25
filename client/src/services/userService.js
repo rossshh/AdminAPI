@@ -30,6 +30,14 @@ export const updateTaskStatus = async (userId, taskId, newStatus) => {
   return JSON.parse(JSON.stringify(user));
 };
 
+export const assignTask = async (userId, taskTitle) => {
+  const user = users.find((u) => u.id === Number(userId));
+  if (!user) return null;
+  const newId = user.tasks.length > 0 ? Math.max(...user.tasks.map((t) => t.id)) + 1 : 1;
+  user.tasks.push({ id: newId, title: taskTitle, status: "pending" });
+  return JSON.parse(JSON.stringify(user));
+};
+
 export const getCategories = async () => {
   return allCategories;
 };

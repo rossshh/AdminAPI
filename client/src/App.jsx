@@ -5,16 +5,16 @@ import UserProfile from "./components/UserProfile";
 
 const theme = createTheme({
   palette: {
-    mode: "dark",
-    primary: { main: "#818cf8" },
-    secondary: { main: "#f472b6" },
+    mode: "light",
+    primary: { main: "#2563eb" },
+    secondary: { main: "#3b82f6" },
     background: {
-      default: "#0f172a",
-      paper: "#1e293b",
+      default: "#f0f4f8",
+      paper: "#ffffff",
     },
     text: {
-      primary: "#f1f5f9",
-      secondary: "#94a3b8",
+      primary: "#1e293b",
+      secondary: "#64748b",
     },
   },
   typography: {
@@ -28,7 +28,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: "none",
-          border: "1px solid rgba(148, 163, 184, 0.1)",
+          border: "1px solid rgba(37, 99, 235, 0.1)",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
         },
       },
     },
@@ -36,7 +37,7 @@ const theme = createTheme({
       styleOverrides: {
         paper: {
           backgroundImage: "none",
-          border: "1px solid rgba(148, 163, 184, 0.15)",
+          border: "1px solid rgba(37, 99, 235, 0.12)",
         },
       },
     },

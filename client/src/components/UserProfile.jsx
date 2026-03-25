@@ -1,19 +1,24 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { getUserById, updateUser, updateUserSection, updateTaskStatus } from "../services/userService";
+import { getUserById, updateUser, updateUserSection, updateTaskStatus, assignTask } from "../services/userService";
 import EditUserForm from "./EditUserForm";
 import TaskBoard from "./TaskBoard";
 import {
   Box, Typography, Avatar, Card, CardContent, IconButton, Chip,
   Snackbar, Alert, Button, Dialog, DialogTitle, DialogContent, Divider,
-  CircularProgress,
+  CircularProgress, TextField,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon, Edit as EditIcon, Close as CloseIcon,
   Email as EmailIcon, Phone as PhoneIcon, Person as PersonIcon,
   Category as CategoryIcon, Badge as BadgeIcon, Business as DeptIcon,
   LocationOn as LocIcon, CalendarMonth as CalendarIcon,
+  Add as AddIcon,
 } from "@mui/icons-material";
+
+const BLUE = "#2563eb";
+const BLUE_LIGHT = "rgba(37,99,235,0.08)";
+const BLUE_BORDER = "rgba(37,99,235,0.2)";
 
 const UserProfile = () => {
   const { id } = useParams();
@@ -24,6 +29,11 @@ const UserProfile = () => {
   const [editSection, setEditSection] = useState("all");
   const [editTitle, setEditTitle] = useState("Edit User");
   const [snackOpen, setSnackOpen] = useState(false);
+  const [snackMsg, setSnackMsg] = useState("User updated successfully!");
+
+  // Assign task state
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
 
   useEffect(() => {
     getUserById(id).then((data) => { setUserData(data); setLoading(false); });
@@ -33,6 +43,7 @@ const UserProfile = () => {
     const saved = await updateUser(id, updatedData);
     setUserData(saved);
     setModalOpen(false);
+    setSnackMsg("User updated successfully!");
     setSnackOpen(true);
   };
 
@@ -47,10 +58,20 @@ const UserProfile = () => {
     setUserData(saved);
   };
 
+  const handleAssignTask = async () => {
+    if (!newTaskTitle.trim()) return;
+    const saved = await assignTask(id, newTaskTitle.trim());
+    setUserData(saved);
+    setNewTaskTitle("");
+    setAssignOpen(false);
+    setSnackMsg("Task assigned successfully!");
+    setSnackOpen(true);
+  };
+
   if (loading)
     return (
       <Box sx={{ minHeight: "100vh", bgcolor: "background.default", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <CircularProgress sx={{ color: "#818cf8" }} />
+        <CircularProgress sx={{ color: BLUE }} />
       </Box>
     );
 
@@ -63,7 +84,7 @@ const UserProfile = () => {
       onClick={() => openEdit(section, title)}
       sx={{
         color: "text.secondary", width: 30, height: 30,
-        "&:hover": { color: "#818cf8", bgcolor: "rgba(129,140,248,0.1)" },
+        "&:hover": { color: BLUE, bgcolor: BLUE_LIGHT },
       }}
     >
       <EditIcon sx={{ fontSize: 16 }} />
@@ -75,16 +96,16 @@ const UserProfile = () => {
       {/* Header Bar */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #1e293b 0%, #334155 50%, #1e293b 100%)",
-          borderBottom: "1px solid rgba(148,163,184,0.1)",
+          background: "linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%)",
+          borderBottom: "1px solid rgba(37,99,235,0.15)",
           px: { xs: 2, md: 4 }, py: 2,
         }}
       >
         <Box sx={{ px: { xs: 2, md: 6 }, display: "flex", alignItems: "center", gap: 1 }}>
-          <IconButton onClick={() => navigate("/")} sx={{ color: "text.secondary", "&:hover": { color: "#818cf8" } }}>
+          <IconButton onClick={() => navigate("/")} sx={{ color: "rgba(255,255,255,0.8)", "&:hover": { color: "#fff" } }}>
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ fontWeight: 600, color: "text.primary" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: "#fff" }}>
             User Profile
           </Typography>
         </Box>
@@ -96,7 +117,7 @@ const UserProfile = () => {
           <Box
             sx={{
               height: 80,
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)",
+              background: "linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%)",
               borderRadius: "12px 12px 0 0",
             }}
           />
@@ -106,10 +127,10 @@ const UserProfile = () => {
                 <Avatar
                   sx={{
                     width: 72, height: 72,
-                    background: "linear-gradient(135deg, #818cf8, #f472b6)",
+                    background: "linear-gradient(135deg, #2563eb, #60a5fa)",
                     fontSize: 26, fontWeight: 700,
                     border: "3px solid", borderColor: "background.paper",
-                    boxShadow: "0 4px 14px rgba(0,0,0,0.3)",
+                    boxShadow: "0 4px 14px rgba(37,99,235,0.25)",
                   }}
                 >
                   {userData.name.charAt(0)}
@@ -123,13 +144,13 @@ const UserProfile = () => {
                   </Typography>
                   <Box sx={{ display: "flex", gap: 1, mt: 0.75 }}>
                     <Chip label={userData.category} size="small"
-                      sx={{ bgcolor: "rgba(129,140,248,0.15)", color: "#a5b4fc", fontWeight: 600, fontSize: 11 }} />
+                      sx={{ bgcolor: BLUE_LIGHT, color: BLUE, fontWeight: 600, fontSize: 11 }} />
                     {userData.role && (
                       <Chip label={userData.role} size="small"
-                        sx={{ bgcolor: "rgba(244,114,182,0.15)", color: "#f9a8d4", fontWeight: 600, fontSize: 11 }} />
+                        sx={{ bgcolor: "rgba(37,99,235,0.05)", color: "#3b82f6", fontWeight: 600, fontSize: 11 }} />
                     )}
                     <Chip label={userData.employeeId} size="small"
-                      sx={{ bgcolor: "rgba(52,211,153,0.12)", color: "#6ee7b7", fontWeight: 600, fontSize: 11 }} />
+                      sx={{ bgcolor: "rgba(37,99,235,0.05)", color: BLUE, fontWeight: 600, fontSize: 11 }} />
                   </Box>
                 </Box>
               </Box>
@@ -137,9 +158,9 @@ const UserProfile = () => {
               {/* Overview quick stats */}
               <Box sx={{ display: "flex", gap: 2 }}>
                 {[
-                  { label: "Pending", val: pendingCount, color: "#fb923c" },
-                  { label: "Done", val: completedCount, color: "#34d399" },
-                  { label: "Total", val: userData.tasks.length, color: "#818cf8" },
+                  { label: "Pending", val: pendingCount, color: "#ea580c" },
+                  { label: "Done", val: completedCount, color: "#16a34a" },
+                  { label: "Total", val: userData.tasks.length, color: BLUE },
                 ].map((s) => (
                   <Box key={s.label} sx={{ textAlign: "center" }}>
                     <Typography sx={{ fontSize: 20, fontWeight: 700, color: s.color, lineHeight: 1 }}>
@@ -157,7 +178,7 @@ const UserProfile = () => {
             <Box
               sx={{
                 display: "flex", flexWrap: "wrap", gap: 3, mt: 2.5, pt: 2,
-                borderTop: "1px solid rgba(148,163,184,0.08)",
+                borderTop: "1px solid rgba(37,99,235,0.08)",
               }}
             >
               {[
@@ -167,14 +188,14 @@ const UserProfile = () => {
                 { icon: <CalendarIcon sx={{ fontSize: 15 }} />, value: `Joined ${new Date(userData.joiningDate).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}` },
               ].map((item, i) => (
                 <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                  <Box sx={{ color: "#818cf8" }}>{item.icon}</Box>
+                  <Box sx={{ color: BLUE }}>{item.icon}</Box>
                   <Typography sx={{ fontSize: 13, color: "text.secondary" }}>{item.value}</Typography>
                 </Box>
               ))}
             </Box>
 
             {/* About Me */}
-            <Box sx={{ mt: 2.5, pt: 2, borderTop: "1px solid rgba(148,163,184,0.08)" }}>
+            <Box sx={{ mt: 2.5, pt: 2, borderTop: "1px solid rgba(37,99,235,0.08)" }}>
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
                 <Typography sx={{ fontWeight: 700, fontSize: 14, color: "text.primary" }}>
                   About Me
@@ -186,9 +207,7 @@ const UserProfile = () => {
               </Typography>
             </Box>
 
-            {/* Skills & Interests row */}
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 3, mt: 2.5, pt: 2, borderTop: "1px solid rgba(148,163,184,0.08)" }}>
-              {/* Skills */}
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 3, mt: 2.5, pt: 2, borderTop: "1px solid rgba(37,99,235,0.08)" }}>
               <Box>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
                   <Typography sx={{ fontWeight: 700, fontSize: 14, color: "text.primary" }}>
@@ -200,8 +219,8 @@ const UserProfile = () => {
                   {(userData.skills || []).map((skill) => (
                     <Chip key={skill} label={skill} size="small"
                       sx={{
-                        bgcolor: "rgba(34,211,238,0.1)", color: "#67e8f9",
-                        border: "1px solid rgba(34,211,238,0.2)",
+                        bgcolor: BLUE_LIGHT, color: BLUE,
+                        border: `1px solid ${BLUE_BORDER}`,
                         fontWeight: 500, fontSize: 11,
                       }}
                     />
@@ -209,7 +228,6 @@ const UserProfile = () => {
                 </Box>
               </Box>
 
-              {/* Interests */}
               <Box>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
                   <Typography sx={{ fontWeight: 700, fontSize: 14, color: "text.primary" }}>
@@ -221,8 +239,8 @@ const UserProfile = () => {
                   {(userData.interests || []).map((interest) => (
                     <Chip key={interest} label={interest} size="small"
                       sx={{
-                        bgcolor: "rgba(244,114,182,0.1)", color: "#f9a8d4",
-                        border: "1px solid rgba(244,114,182,0.2)",
+                        bgcolor: "rgba(37,99,235,0.05)", color: "#3b82f6",
+                        border: "1px solid rgba(37,99,235,0.12)",
                         fontWeight: 500, fontSize: 11,
                       }}
                     />
@@ -251,11 +269,11 @@ const UserProfile = () => {
               ].map(({ icon, label, value }) => (
                 <Box key={label} sx={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
-                  py: 1.5, borderBottom: "1px solid rgba(148,163,184,0.08)",
+                  py: 1.5, borderBottom: "1px solid rgba(37,99,235,0.06)",
                   "&:last-child": { borderBottom: "none" },
                 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    <Box sx={{ color: "#818cf8" }}>{icon}</Box>
+                    <Box sx={{ color: BLUE }}>{icon}</Box>
                     <Typography sx={{ fontSize: 14, color: "text.secondary" }}>{label}</Typography>
                   </Box>
                   <Typography sx={{ fontSize: 14, fontWeight: 500, color: "text.primary" }}>{value}</Typography>
@@ -281,11 +299,11 @@ const UserProfile = () => {
               ].map(({ icon, label, value }) => (
                 <Box key={label} sx={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
-                  py: 1.5, borderBottom: "1px solid rgba(148,163,184,0.08)",
+                  py: 1.5, borderBottom: "1px solid rgba(37,99,235,0.06)",
                   "&:last-child": { borderBottom: "none" },
                 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    <Box sx={{ color: "#818cf8" }}>{icon}</Box>
+                    <Box sx={{ color: BLUE }}>{icon}</Box>
                     <Typography sx={{ fontSize: 14, color: "text.secondary" }}>{label}</Typography>
                   </Box>
                   <Typography sx={{ fontSize: 14, fontWeight: 500, color: "text.primary" }}>{value}</Typography>
@@ -312,10 +330,10 @@ const UserProfile = () => {
                     const saved = await updateUser(id, updated);
                     setUserData(saved);
                   }}
-                  deleteIcon={<CloseIcon sx={{ fontSize: "14px !important", color: "#a5b4fc !important", "&:hover": { color: "#f87171 !important" } }} />}
+                  deleteIcon={<CloseIcon sx={{ fontSize: "14px !important", color: `${BLUE} !important`, "&:hover": { color: "#dc2626 !important" } }} />}
                   sx={{
-                    bgcolor: "rgba(129,140,248,0.1)", color: "#a5b4fc",
-                    border: "1px solid rgba(129,140,248,0.2)",
+                    bgcolor: BLUE_LIGHT, color: BLUE,
+                    border: `1px solid ${BLUE_BORDER}`,
                     fontWeight: 500, fontSize: 12,
                   }}
                 />
@@ -331,9 +349,28 @@ const UserProfile = () => {
               <Typography sx={{ fontWeight: 700, fontSize: 16, color: "text.primary" }}>
                 Tasks
               </Typography>
-              <Typography sx={{ fontSize: 12, color: "text.secondary", fontStyle: "italic" }}>
-                Drag to move between columns
-              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Typography sx={{ fontSize: 12, color: "text.secondary", fontStyle: "italic" }}>
+                  Drag to move between columns
+                </Typography>
+                <Button
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={() => setAssignOpen(true)}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    color: "#fff",
+                    bgcolor: BLUE,
+                    borderRadius: 2,
+                    px: 2,
+                    "&:hover": { bgcolor: "#1d4ed8" },
+                  }}
+                >
+                  Assign Task
+                </Button>
+              </Box>
             </Box>
             <TaskBoard tasks={userData.tasks} onTaskMove={handleTaskMove} />
           </CardContent>
@@ -348,16 +385,75 @@ const UserProfile = () => {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <Divider sx={{ borderColor: "rgba(148,163,184,0.1)" }} />
+        <Divider sx={{ borderColor: "rgba(37,99,235,0.1)" }} />
         <DialogContent sx={{ pt: 3 }}>
           <EditUserForm user={userData} setUser={handleSave} onCancel={() => setModalOpen(false)} section={editSection} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Task Modal */}
+      <Dialog open={assignOpen} onClose={() => setAssignOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 700, fontSize: 18 }}>
+          Assign New Task
+          <IconButton onClick={() => setAssignOpen(false)} sx={{ color: "text.secondary" }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <Divider sx={{ borderColor: "rgba(37,99,235,0.1)" }} />
+        <DialogContent sx={{ pt: 3 }}>
+          <TextField
+            fullWidth
+            label="Task Title"
+            value={newTaskTitle}
+            onChange={(e) => setNewTaskTitle(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleAssignTask(); }}
+            placeholder="Enter task title..."
+            sx={{
+              mb: 2,
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2.5,
+                border: "1px solid rgba(37,99,235,0.12)",
+                "&:hover": { border: `1px solid ${BLUE_BORDER}` },
+                "&.Mui-focused": { border: `1px solid ${BLUE}` },
+                "& fieldset": { border: "none" },
+              },
+              "& .MuiInputLabel-root": { color: "text.secondary" },
+            }}
+          />
+          <Typography sx={{ fontSize: 12, color: "text.secondary", mb: 2 }}>
+            This task will be assigned with <strong>Pending</strong> status.
+          </Typography>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1.5 }}>
+            <Button onClick={() => setAssignOpen(false)}
+              sx={{
+                textTransform: "none", fontWeight: 600, borderRadius: 2, px: 3,
+                color: "text.secondary", border: "1px solid rgba(37,99,235,0.15)",
+                "&:hover": { bgcolor: "rgba(37,99,235,0.04)" },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleAssignTask}
+              variant="contained"
+              disabled={!newTaskTitle.trim()}
+              sx={{
+                textTransform: "none", fontWeight: 600, borderRadius: 2, px: 3,
+                bgcolor: BLUE,
+                boxShadow: "0 4px 14px rgba(37,99,235,0.25)",
+                "&:hover": { bgcolor: "#1d4ed8", boxShadow: "0 6px 20px rgba(37,99,235,0.3)" },
+                "&.Mui-disabled": { bgcolor: "rgba(37,99,235,0.3)", color: "rgba(255,255,255,0.6)" },
+              }}
+            >
+              Assign Task
+            </Button>
+          </Box>
         </DialogContent>
       </Dialog>
 
       {/* Snackbar */}
       <Snackbar open={snackOpen} autoHideDuration={3000} onClose={() => setSnackOpen(false)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
         <Alert onClose={() => setSnackOpen(false)} severity="success" sx={{ borderRadius: 2, fontWeight: 500 }}>
-          User updated successfully!
+          {snackMsg}
         </Alert>
       </Snackbar>
     </Box>

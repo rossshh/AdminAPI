@@ -20,6 +20,10 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
+const BLUE = "#2563eb";
+const BLUE_LIGHT = "rgba(37,99,235,0.08)";
+const BLUE_BORDER = "rgba(37,99,235,0.25)";
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
@@ -55,12 +59,12 @@ const Dashboard = () => {
     name.split(" ").map((n) => n[0]).join("").toUpperCase();
 
   const avatarColors = [
-    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-    "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-    "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-    "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-    "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
+    "linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)",
+    "linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)",
+    "linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)",
+    "linear-gradient(135deg, #2563eb 0%, #6366f1 100%)",
+    "linear-gradient(135deg, #1e40af 0%, #2563eb 100%)",
+    "linear-gradient(135deg, #3b82f6 0%, #818cf8 100%)",
   ];
 
   return (
@@ -68,8 +72,8 @@ const Dashboard = () => {
       {/* Header */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
-          borderBottom: "1px solid rgba(148, 163, 184, 0.1)",
+          background: "linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%)",
+          borderBottom: "1px solid rgba(37,99,235,0.15)",
           px: { xs: 2, md: 4 },
           py: 3,
         }}
@@ -85,19 +89,19 @@ const Dashboard = () => {
             <Box
               sx={{
                 width: 40, height: 40, borderRadius: 2,
-                background: "linear-gradient(135deg, #818cf8, #f472b6)",
+                background: "rgba(255,255,255,0.2)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}
             >
               <PeopleIcon sx={{ color: "#fff", fontSize: 22 }} />
             </Box>
-            <Typography variant="h5" sx={{ fontWeight: 700, color: "text.primary", letterSpacing: -0.5 }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#fff", letterSpacing: -0.5 }}>
               Admin Panel
             </Typography>
           </Box>
           <Chip
             label={`${filtered.length} / ${users.length} Users`}
-            sx={{ bgcolor: "rgba(129, 140, 248, 0.15)", color: "#818cf8", fontWeight: 600, fontSize: 13 }}
+            sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "#fff", fontWeight: 600, fontSize: 13 }}
           />
         </Box>
       </Box>
@@ -124,9 +128,9 @@ const Dashboard = () => {
               flex: 1, minWidth: 200,
               "& .MuiOutlinedInput-root": {
                 bgcolor: "background.paper", borderRadius: 3,
-                border: "1px solid rgba(148, 163, 184, 0.1)",
-                "&:hover": { border: "1px solid rgba(129, 140, 248, 0.3)" },
-                "&.Mui-focused": { border: "1px solid #818cf8" },
+                border: "1px solid rgba(37,99,235,0.12)",
+                "&:hover": { border: `1px solid ${BLUE_BORDER}` },
+                "&.Mui-focused": { border: `1px solid ${BLUE}` },
                 "& fieldset": { border: "none" },
               },
             }}
@@ -136,8 +140,8 @@ const Dashboard = () => {
               minWidth: 160,
               "& .MuiOutlinedInput-root": {
                 bgcolor: "background.paper", borderRadius: 3,
-                border: "1px solid rgba(148, 163, 184, 0.1)",
-                "&:hover": { border: "1px solid rgba(129, 140, 248, 0.3)" },
+                border: "1px solid rgba(37,99,235,0.12)",
+                "&:hover": { border: `1px solid ${BLUE_BORDER}` },
                 "& fieldset": { border: "none" },
               },
             }}
@@ -167,12 +171,12 @@ const Dashboard = () => {
               sx={{
                 fontWeight: 600, fontSize: 12, cursor: "pointer",
                 transition: "all 0.2s ease",
-                bgcolor: categoryFilter === cat ? "rgba(129,140,248,0.25)" : "rgba(148,163,184,0.08)",
-                color: categoryFilter === cat ? "#a5b4fc" : "text.secondary",
-                border: categoryFilter === cat ? "1px solid rgba(129,140,248,0.4)" : "1px solid transparent",
+                bgcolor: categoryFilter === cat ? BLUE_LIGHT : "rgba(100,116,139,0.08)",
+                color: categoryFilter === cat ? BLUE : "text.secondary",
+                border: categoryFilter === cat ? `1px solid ${BLUE_BORDER}` : "1px solid transparent",
                 "&:hover": {
-                  bgcolor: "rgba(129,140,248,0.15)",
-                  color: "#a5b4fc",
+                  bgcolor: BLUE_LIGHT,
+                  color: BLUE,
                 },
               }}
             />
@@ -191,12 +195,12 @@ const Dashboard = () => {
                 sx={{
                   display: "flex", alignItems: "center", gap: 2, p: 2,
                   borderRadius: 3, bgcolor: "background.paper",
-                  border: "1px solid rgba(148, 163, 184, 0.08)",
+                  border: "1px solid rgba(37,99,235,0.08)",
                   cursor: "pointer", transition: "all 0.2s ease",
                   "&:hover": {
-                    border: "1px solid rgba(129, 140, 248, 0.3)",
+                    border: `1px solid ${BLUE_BORDER}`,
                     transform: "translateY(-1px)",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+                    boxShadow: "0 4px 20px rgba(37,99,235,0.1)",
                   },
                 }}
               >
@@ -224,8 +228,8 @@ const Dashboard = () => {
                     label={`${pending} pending`}
                     size="small"
                     sx={{
-                      bgcolor: pending > 0 ? "rgba(251,146,60,0.1)" : "rgba(148,163,184,0.08)",
-                      color: pending > 0 ? "#fb923c" : "text.secondary",
+                      bgcolor: pending > 0 ? "rgba(251,146,60,0.1)" : "rgba(100,116,139,0.08)",
+                      color: pending > 0 ? "#ea580c" : "text.secondary",
                       fontSize: 11, fontWeight: 500,
                     }}
                   />
@@ -233,7 +237,7 @@ const Dashboard = () => {
                     label={`${completed} done`}
                     size="small"
                     sx={{
-                      bgcolor: "rgba(52,211,153,0.1)", color: "#34d399",
+                      bgcolor: "rgba(22,163,74,0.08)", color: "#16a34a",
                       fontSize: 11, fontWeight: 500,
                     }}
                   />
@@ -243,7 +247,7 @@ const Dashboard = () => {
                   label={user.category}
                   size="small"
                   sx={{
-                    bgcolor: "rgba(129, 140, 248, 0.1)", color: "#a5b4fc",
+                    bgcolor: BLUE_LIGHT, color: BLUE,
                     fontSize: 12, fontWeight: 500,
                     display: { xs: "none", md: "flex" },
                   }}
@@ -254,7 +258,7 @@ const Dashboard = () => {
                   onClick={(e) => { e.stopPropagation(); navigate(`/user/${user.id}`); }}
                   sx={{
                     color: "text.secondary",
-                    "&:hover": { color: "#818cf8", bgcolor: "rgba(129,140,248,0.1)" },
+                    "&:hover": { color: BLUE, bgcolor: BLUE_LIGHT },
                   }}
                 >
                   <ViewIcon fontSize="small" />
