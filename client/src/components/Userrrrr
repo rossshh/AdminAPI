@@ -1,0 +1,199 @@
+import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { getUserById, updateUser } from "../services/userService";
+import EditUserForm from "./EditUserForm";
+import {
+  Box, Typography, Avatar, Card, CardContent, IconButton, Chip,
+  AppBar, Toolbar, Button, Dialog, DialogTitle, DialogContent, Divider,
+} from "@mui/material";
+import {
+  ArrowBack as ArrowBackIcon,
+  Edit as EditIcon,
+  Close as CloseIcon,
+  EmailOutlined as EmailIcon,
+  PhoneOutlined as PhoneIcon,
+  BadgeOutlined as BadgeIcon,
+  CategoryOutlined as CategoryIcon,
+  TaskAlt as TaskDoneIcon,
+  HourglassEmpty as TaskPendingIcon,
+  FormatListBulleted as TaskTotalIcon,
+} from "@mui/icons-material";
+
+const UserProfile = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    getUserById(id).then((data) => {
+      setUserData(data);
+      setLoading(false);
+    });
+  }, [id]);
+
+  const handleSave = async (updatedData) => {
+    const saved = await updateUser(id, updatedData);
+    setUserData(saved);
+    setModalOpen(false);
+    alert("User updated successfully!");
+  };
+
+  if (loading) return (
+    <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "#f8f9ff" }}>
+      <Typography sx={{ fontFamily: "'DM Sans', sans-serif", color: "#3b5bdb" }}>Loading…</Typography>
+    </Box>
+  );
+
+  const totalTasks = userData.tasksPending + userData.tasksCompleted;
+
+  const detailRows = [
+    { icon: <BadgeIcon fontSize="small" />,    label: "Name",     value: userData.name },
+    { icon: <EmailIcon fontSize="small" />,    label: "Email",    value: userData.email },
+    { icon: <PhoneIcon fontSize="small" />,    label: "Phone",    value: userData.phone },
+    { icon: <CategoryIcon fontSize="small" />, label: "Category", value: userData.category },
+  ];
+
+  const statCards = [
+    { icon: <TaskPendingIcon fontSize="small" />, value: userData.tasksPending,   label: "Pending",   bg: "#fff7ed", color: "#c2410c" },
+    { icon: <TaskDoneIcon fontSize="small" />,    value: userData.tasksCompleted, label: "Completed", bg: "#f0fdf4", color: "#15803d" },
+    { icon: <TaskTotalIcon fontSize="small" />,   value: totalTasks,              label: "Total",     bg: "#eff6ff", color: "#1d4ed8" },
+  ];
+
+  return (
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f8f9ff" }}>
+
+      {/* Top bar */}
+      <AppBar position="static" elevation={0} sx={{ bgcolor: "#1a1a2e" }}>
+        <Toolbar>
+          <IconButton color="inherit" onClick={() => navigate("/")} sx={{ mr: 1 }}>
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography sx={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}>
+            User Profile
+          </Typography>
+        </Toolbar>
+      </AppBar>
+
+      {/* Hero banner */}
+      <Box sx={{
+        bgcolor: "#1a1a2e", pt: 5, pb: 10, px: { xs: 3, md: 10 },
+        position: "relative", overflow: "hidden",
+        "&::after": {
+          content: '""', position: "absolute", bottom: 0, left: 0, right: 0,
+          height: "60px", bgcolor: "#f8f9ff",
+          borderRadius: "50% 50% 0 0 / 100% 100% 0 0",
+        },
+      }}>
+        <Box sx={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, borderRadius: "50%", bgcolor: "rgba(59,91,219,0.12)" }} />
+        <Box sx={{ position: "absolute", top: 20, right: 80, width: 80, height: 80, borderRadius: "50%", bgcolor: "rgba(59,91,219,0.08)" }} />
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2.5, position: "relative", zIndex: 1 }}>
+          <Avatar sx={{ width: 72, height: 72, bgcolor: "#3b5bdb", fontSize: 28, fontWeight: 800, border: "3px solid rgba(255,255,255,0.15)" }}>
+            {userData.name?.[0]}
+          </Avatar>
+          <Box>
+            <Typography sx={{ color: "#fff", fontSize: "1.5rem", fontWeight: 800, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.2 }}>
+              {userData.name}
+            </Typography>
+            <Chip
+              label={userData.category} size="small"
+              sx={{ mt: 0.8, bgcolor: "rgba(59,91,219,0.25)", color: "#a5b4fc", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: "0.72rem", border: "1px solid rgba(165,180,252,0.3)" }}
+            />
+          </Box>
+          <Button
+            variant="contained" startIcon={<EditIcon />} onClick={() => setModalOpen(true)}
+            sx={{ ml: "auto", bgcolor: "#3b5bdb", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, borderRadius: "12px", textTransform: "none", px: 3, "&:hover": { bgcolor: "#2f4ac4" } }}
+          >
+            Edit
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Content */}
+      <Box sx={{ px: { xs: 2, md: 10 }, pb: 6, mt: "-20px", position: "relative", zIndex: 1 }}>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+
+          {/* Details card */}
+          <Card elevation={0} sx={{ borderRadius: "20px", border: "1px solid rgba(0,0,0,0.07)" }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography sx={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: "1rem", mb: 2, color: "#1a1a2e" }}>
+                Details
+              </Typography>
+              {detailRows.map(({ icon, label, value }) => (
+                <Box key={label} sx={{
+                  display: "flex", alignItems: "center", gap: 2, py: 1.5,
+                  borderBottom: "1px solid", borderColor: "rgba(0,0,0,0.06)",
+                  "&:last-child": { borderBottom: "none" },
+                }}>
+                  <Box sx={{ width: 36, height: 36, borderRadius: "10px", bgcolor: "#f0f4ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#3b5bdb", flexShrink: 0 }}>
+                    {icon}
+                  </Box>
+                  <Box>
+                    <Typography sx={{ fontSize: "0.7rem", color: "text.disabled", fontFamily: "'DM Sans', sans-serif", letterSpacing: 1, textTransform: "uppercase" }}>
+                      {label}
+                    </Typography>
+                    <Typography sx={{ fontSize: "0.95rem", fontWeight: 600, fontFamily: "'DM Sans', sans-serif", color: "#1a1a2e" }}>
+                      {value}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Permissions + Tasks card */}
+          <Card elevation={0} sx={{ borderRadius: "20px", border: "1px solid rgba(0,0,0,0.07)" }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography sx={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: "1rem", mb: 2, color: "#1a1a2e" }}>
+                Permissions
+              </Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 3 }}>
+                {userData.permissions.map((perm) => (
+                  <Chip key={perm} label={perm}
+                    sx={{ bgcolor: "#f0f4ff", color: "#3b5bdb", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, border: "1px solid #c7d2fe", fontSize: "0.78rem" }}
+                  />
+                ))}
+              </Box>
+
+              <Divider sx={{ mb: 2.5 }} />
+
+              <Typography sx={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: "1rem", mb: 2, color: "#1a1a2e" }}>
+                Tasks
+              </Typography>
+              <Box sx={{ display: "flex", gap: 2 }}>
+                {statCards.map(({ icon, value, label, bg, color }) => (
+                  <Box key={label} sx={{ flex: 1, p: 2.5, borderRadius: "16px", bgcolor: bg, display: "flex", flexDirection: "column", gap: 0.5 }}>
+                    <Box sx={{ color, mb: 0.5 }}>{icon}</Box>
+                    <Typography sx={{ fontSize: "1.6rem", fontWeight: 800, color, fontFamily: "'DM Sans', sans-serif", lineHeight: 1 }}>
+                      {value}
+                    </Typography>
+                    <Typography sx={{ fontSize: "0.72rem", color, opacity: 0.7, fontFamily: "'DM Sans', sans-serif", textTransform: "uppercase", letterSpacing: 0.8 }}>
+                      {label}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </CardContent>
+          </Card>
+
+        </Box>
+      </Box>
+
+      {/* Edit Modal */}
+      <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: "20px" } }}>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "'DM Sans', sans-serif", fontWeight: 800, color: "#1a1a2e" }}>
+          Edit User
+          <IconButton onClick={() => setModalOpen(false)}><CloseIcon /></IconButton>
+        </DialogTitle>
+        <Divider />
+        <DialogContent sx={{ pt: 3 }}>
+          <EditUserForm user={userData} setUser={handleSave} onCancel={() => setModalOpen(false)} />
+        </DialogContent>
+      </Dialog>
+    </Box>
+  );
+};
+
+export default UserProfile;
