@@ -5,11 +5,48 @@ import UserProfile from "./components/UserProfile";
 
 const theme = createTheme({
   palette: {
-    primary: { main: "#1976d2" },
-    secondary: { main: "#9c27b0" },
+    mode: "dark",
+    primary: { main: "#818cf8" },
+    secondary: { main: "#f472b6" },
+    background: {
+      default: "#0f172a",
+      paper: "#1e293b",
+    },
+    text: {
+      primary: "#f1f5f9",
+      secondary: "#94a3b8",
+    },
   },
   typography: {
     fontFamily: "'Inter', sans-serif",
+  },
+  shape: {
+    borderRadius: 12,
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          backgroundImage: "none",
+          border: "1px solid rgba(148, 163, 184, 0.1)",
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          backgroundImage: "none",
+          border: "1px solid rgba(148, 163, 184, 0.15)",
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          fontWeight: 500,
+        },
+      },
+    },
   },
 });
 

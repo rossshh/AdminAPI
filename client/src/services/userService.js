@@ -1,29 +1,39 @@
 import { usersData, allCategories, allPermissions } from "../data/users";
 
-let users = [...usersData]; // mutable copy for in-session edits
+let users = JSON.parse(JSON.stringify(usersData)); // deep copy for in-session edits
 
 export const getUsers = async () => {
-  // Replace with: const res = await fetch('/api/users'); return res.json();
   return [...users];
 };
 
 export const getUserById = async (id) => {
-  // Replace with: const res = await fetch(`/api/users/${id}`); return res.json();
-  return users.find((u) => u.id === Number(id)) || null;
+  return JSON.parse(JSON.stringify(users.find((u) => u.id === Number(id)) || null));
 };
 
 export const updateUser = async (id, updatedData) => {
-  // Replace with: const res = await fetch(`/api/users/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(updatedData) }); return res.json();
   users = users.map((u) => (u.id === Number(id) ? { ...u, ...updatedData } : u));
-  return users.find((u) => u.id === Number(id));
+  return JSON.parse(JSON.stringify(users.find((u) => u.id === Number(id))));
+};
+
+export const updateUserSection = async (id, section, data) => {
+  const user = users.find((u) => u.id === Number(id));
+  if (!user) return null;
+  Object.assign(user, data);
+  return JSON.parse(JSON.stringify(user));
+};
+
+export const updateTaskStatus = async (userId, taskId, newStatus) => {
+  const user = users.find((u) => u.id === Number(userId));
+  if (!user) return null;
+  const task = user.tasks.find((t) => t.id === taskId);
+  if (task) task.status = newStatus;
+  return JSON.parse(JSON.stringify(user));
 };
 
 export const getCategories = async () => {
-  // Replace with: const res = await fetch('/api/categories'); return res.json();
   return allCategories;
 };
 
 export const getPermissions = async () => {
-  // Replace with: const res = await fetch('/api/permissions'); return res.json();
   return allPermissions;
 };

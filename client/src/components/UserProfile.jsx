@@ -1,14 +1,18 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { getUserById, updateUser } from "../services/userService";
+import { getUserById, updateUser, updateUserSection, updateTaskStatus } from "../services/userService";
 import EditUserForm from "./EditUserForm";
+import TaskBoard from "./TaskBoard";
 import {
   Box, Typography, Avatar, Card, CardContent, IconButton, Chip,
-  AppBar, Toolbar, Snackbar, Alert, Button, Dialog, DialogTitle,
-  DialogContent, Divider, LinearProgress, Grid,
+  Snackbar, Alert, Button, Dialog, DialogTitle, DialogContent, Divider,
+  CircularProgress,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon, Edit as EditIcon, Close as CloseIcon,
+  Email as EmailIcon, Phone as PhoneIcon, Person as PersonIcon,
+  Category as CategoryIcon, Badge as BadgeIcon, Business as DeptIcon,
+  LocationOn as LocIcon, CalendarMonth as CalendarIcon,
 } from "@mui/icons-material";
 
 const UserProfile = () => {
@@ -17,115 +21,345 @@ const UserProfile = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editSection, setEditSection] = useState("all");
+  const [editTitle, setEditTitle] = useState("Edit User");
+  const [snackOpen, setSnackOpen] = useState(false);
 
   useEffect(() => {
-    getUserById(id).then((data) => {
-      setUserData(data);
-      setLoading(false);
-    });
+    getUserById(id).then((data) => { setUserData(data); setLoading(false); });
   }, [id]);
 
   const handleSave = async (updatedData) => {
     const saved = await updateUser(id, updatedData);
     setUserData(saved);
     setModalOpen(false);
-    alert("User updated successfully!");
+    setSnackOpen(true);
   };
 
-  if (loading) return <Box className="p-4 text-center"><Typography>Loading...</Typography></Box>;
+  const openEdit = (section, title) => {
+    setEditSection(section);
+    setEditTitle(title);
+    setModalOpen(true);
+  };
 
-  const totalTasks = userData.tasksPending + userData.tasksCompleted;
+  const handleTaskMove = async (taskId, newStatus) => {
+    const saved = await updateTaskStatus(id, taskId, newStatus);
+    setUserData(saved);
+  };
+
+  if (loading)
+    return (
+      <Box sx={{ minHeight: "100vh", bgcolor: "background.default", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <CircularProgress sx={{ color: "#818cf8" }} />
+      </Box>
+    );
+
+  const pendingCount = userData.tasks.filter((t) => t.status === "pending").length;
+  const completedCount = userData.tasks.filter((t) => t.status === "completed").length;
+
+  const sectionEditBtn = (section, title) => (
+    <IconButton
+      size="small"
+      onClick={() => openEdit(section, title)}
+      sx={{
+        color: "text.secondary", width: 30, height: 30,
+        "&:hover": { color: "#818cf8", bgcolor: "rgba(129,140,248,0.1)" },
+      }}
+    >
+      <EditIcon sx={{ fontSize: 16 }} />
+    </IconButton>
+  );
 
   return (
-    <Box className="min-h-screen bg-gray-50">
-      <AppBar position="static">
-        <Toolbar>
-          <IconButton color="inherit" onClick={() => navigate("/")}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
+      {/* Header Bar */}
+      <Box
+        sx={{
+          background: "linear-gradient(135deg, #1e293b 0%, #334155 50%, #1e293b 100%)",
+          borderBottom: "1px solid rgba(148,163,184,0.1)",
+          px: { xs: 2, md: 4 }, py: 2,
+        }}
+      >
+        <Box sx={{ px: { xs: 2, md: 6 }, display: "flex", alignItems: "center", gap: 1 }}>
+          <IconButton onClick={() => navigate("/")} sx={{ color: "text.secondary", "&:hover": { color: "#818cf8" } }}>
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h6">User Profile</Typography>
-        </Toolbar>
-      </AppBar>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: "text.primary" }}>
+            User Profile
+          </Typography>
+        </Box>
+      </Box>
 
-      <Box className="m-20">
-        <Card sx={{ mb: 3 }}>
-          <CardContent className="flex align-center justify-between flex-wrap gap-2">
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Avatar sx={{ width: 64, height: 64, bgcolor: "#1976d2", fontSize: 24 }}>
-              </Avatar>
+      <Box sx={{ px: { xs: 2, md: 6 }, py: 4 }}>
+        {/* ═══ OVERVIEW PANEL ═══ */}
+        <Card sx={{ mb: 3, overflow: "visible" }}>
+          <Box
+            sx={{
+              height: 80,
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)",
+              borderRadius: "12px 12px 0 0",
+            }}
+          />
+          <CardContent sx={{ pt: 0, px: 3, pb: 3 }}>
+            <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mt: -4 }}>
+              <Box sx={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
+                <Avatar
+                  sx={{
+                    width: 72, height: 72,
+                    background: "linear-gradient(135deg, #818cf8, #f472b6)",
+                    fontSize: 26, fontWeight: 700,
+                    border: "3px solid", borderColor: "background.paper",
+                    boxShadow: "0 4px 14px rgba(0,0,0,0.3)",
+                  }}
+                >
+                  {userData.name.charAt(0)}
+                </Avatar>
+                <Box sx={{ mb: 0.5 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700, color: "text.primary", lineHeight: 1.2 }}>
+                    {userData.name}
+                  </Typography>
+                  <Typography sx={{ fontSize: 13, color: "text.secondary", mt: 0.25 }}>
+                    {userData.designation} • {userData.department}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1, mt: 0.75 }}>
+                    <Chip label={userData.category} size="small"
+                      sx={{ bgcolor: "rgba(129,140,248,0.15)", color: "#a5b4fc", fontWeight: 600, fontSize: 11 }} />
+                    {userData.role && (
+                      <Chip label={userData.role} size="small"
+                        sx={{ bgcolor: "rgba(244,114,182,0.15)", color: "#f9a8d4", fontWeight: 600, fontSize: 11 }} />
+                    )}
+                    <Chip label={userData.employeeId} size="small"
+                      sx={{ bgcolor: "rgba(52,211,153,0.12)", color: "#6ee7b7", fontWeight: 600, fontSize: 11 }} />
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Overview quick stats */}
+              <Box sx={{ display: "flex", gap: 2 }}>
+                {[
+                  { label: "Pending", val: pendingCount, color: "#fb923c" },
+                  { label: "Done", val: completedCount, color: "#34d399" },
+                  { label: "Total", val: userData.tasks.length, color: "#818cf8" },
+                ].map((s) => (
+                  <Box key={s.label} sx={{ textAlign: "center" }}>
+                    <Typography sx={{ fontSize: 20, fontWeight: 700, color: s.color, lineHeight: 1 }}>
+                      {s.val}
+                    </Typography>
+                    <Typography sx={{ fontSize: 11, color: "text.secondary", fontWeight: 500 }}>
+                      {s.label}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+
+            {/* Overview info row */}
+            <Box
+              sx={{
+                display: "flex", flexWrap: "wrap", gap: 3, mt: 2.5, pt: 2,
+                borderTop: "1px solid rgba(148,163,184,0.08)",
+              }}
+            >
+              {[
+                { icon: <EmailIcon sx={{ fontSize: 15 }} />, value: userData.email },
+                { icon: <PhoneIcon sx={{ fontSize: 15 }} />, value: userData.phone },
+                { icon: <LocIcon sx={{ fontSize: 15 }} />, value: userData.location },
+                { icon: <CalendarIcon sx={{ fontSize: 15 }} />, value: `Joined ${new Date(userData.joiningDate).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}` },
+              ].map((item, i) => (
+                <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                  <Box sx={{ color: "#818cf8" }}>{item.icon}</Box>
+                  <Typography sx={{ fontSize: 13, color: "text.secondary" }}>{item.value}</Typography>
+                </Box>
+              ))}
+            </Box>
+
+            {/* About Me */}
+            <Box sx={{ mt: 2.5, pt: 2, borderTop: "1px solid rgba(148,163,184,0.08)" }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                <Typography sx={{ fontWeight: 700, fontSize: 14, color: "text.primary" }}>
+                  About Me
+                </Typography>
+                {sectionEditBtn("aboutMe", "Edit About Me")}
+              </Box>
+              <Typography sx={{ fontSize: 13, color: "text.secondary", lineHeight: 1.6 }}>
+                {userData.aboutMe || "No bio added yet."}
+              </Typography>
+            </Box>
+
+            {/* Skills & Interests row */}
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 3, mt: 2.5, pt: 2, borderTop: "1px solid rgba(148,163,184,0.08)" }}>
+              {/* Skills */}
               <Box>
-                <Typography variant="h5" fontWeight={600}>{userData.name}</Typography>
-                <Box sx={{ display: "flex", gap: 1, mt: 0.5 }}>
-                  <Chip label={userData.category} size="small" variant="outlined" />
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: 14, color: "text.primary" }}>
+                    Skills
+                  </Typography>
+                  {sectionEditBtn("skills", "Edit Skills")}
+                </Box>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                  {(userData.skills || []).map((skill) => (
+                    <Chip key={skill} label={skill} size="small"
+                      sx={{
+                        bgcolor: "rgba(34,211,238,0.1)", color: "#67e8f9",
+                        border: "1px solid rgba(34,211,238,0.2)",
+                        fontWeight: 500, fontSize: 11,
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+
+              {/* Interests */}
+              <Box>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: 14, color: "text.primary" }}>
+                    Interests
+                  </Typography>
+                  {sectionEditBtn("interests", "Edit Interests")}
+                </Box>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                  {(userData.interests || []).map((interest) => (
+                    <Chip key={interest} label={interest} size="small"
+                      sx={{
+                        bgcolor: "rgba(244,114,182,0.1)", color: "#f9a8d4",
+                        border: "1px solid rgba(244,114,182,0.2)",
+                        fontWeight: 500, fontSize: 11,
+                      }}
+                    />
+                  ))}
                 </Box>
               </Box>
             </Box>
-            <Button variant="contained" startIcon={<EditIcon />} onClick={() => setModalOpen(true)}>
-              Edit
-            </Button>
           </CardContent>
         </Card>
 
-        <Box className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* ═══ DETAIL CARDS GRID ═══ */}
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, mb: 3 }}>
+          {/* Basic Details */}
           <Card>
-            <CardContent>
-              <Typography variant="h4" gutterBottom>Details</Typography>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                <Typography sx={{ fontWeight: 700, fontSize: 16, color: "text.primary" }}>
+                  Basic Details
+                </Typography>
+                {sectionEditBtn("basic", "Edit Basic Details")}
+              </Box>
               {[
-                { label: "Name", value: userData.name },
-                { label: "Email", value: userData.email },
-                { label: "Phone", value: userData.phone },
-                { label: "Category", value: userData.category },
-              ].map(({ label, value }) => (
-                <Box key={label} className="flex items-center justify-between py-2 border-b border-gray-200">
-                  <Typography variant="h5" color="text.secondary">{label}</Typography>
-                  <Typography variant="h5" fontWeight={500}>{value}</Typography>
+                { icon: <PersonIcon sx={{ fontSize: 18 }} />, label: "Name", value: userData.name },
+                { icon: <EmailIcon sx={{ fontSize: 18 }} />, label: "Email", value: userData.email },
+                { icon: <PhoneIcon sx={{ fontSize: 18 }} />, label: "Phone", value: userData.phone },
+              ].map(({ icon, label, value }) => (
+                <Box key={label} sx={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  py: 1.5, borderBottom: "1px solid rgba(148,163,184,0.08)",
+                  "&:last-child": { borderBottom: "none" },
+                }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    <Box sx={{ color: "#818cf8" }}>{icon}</Box>
+                    <Typography sx={{ fontSize: 14, color: "text.secondary" }}>{label}</Typography>
+                  </Box>
+                  <Typography sx={{ fontSize: 14, fontWeight: 500, color: "text.primary" }}>{value}</Typography>
                 </Box>
               ))}
             </CardContent>
           </Card>
 
+          {/* Work Info */}
           <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>Permissions</Typography>
-              <Box className="flex flex-wrap gap-1 mb-3">
-                {userData.permissions.map((perm) => (
-                  <Chip key={perm} label={perm} color="primary" variant="outlined" size="medium" />
-                ))}
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                <Typography sx={{ fontWeight: 700, fontSize: 16, color: "text.primary" }}>
+                  Work Info
+                </Typography>
+                {sectionEditBtn("work", "Edit Work Info")}
               </Box>
-
-              <Divider sx={{ my: 2 }} />
-
-              <Typography variant="h6" gutterBottom>Tasks</Typography>
-              <Box className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Box className="p-3 mr-10 ml-10 bg-orange-100 rounded-lg">
-                  <Typography variant="h5" fontWeight={600} color="primary">{userData.tasksPending}</Typography>
-                  <Typography variant="caption">Pending</Typography>
+              {[
+                { icon: <CategoryIcon sx={{ fontSize: 18 }} />, label: "Category", value: userData.category },
+                { icon: <DeptIcon sx={{ fontSize: 18 }} />, label: "Department", value: userData.department },
+                { icon: <BadgeIcon sx={{ fontSize: 18 }} />, label: "Designation", value: userData.designation },
+                { icon: <LocIcon sx={{ fontSize: 18 }} />, label: "Location", value: userData.location },
+              ].map(({ icon, label, value }) => (
+                <Box key={label} sx={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  py: 1.5, borderBottom: "1px solid rgba(148,163,184,0.08)",
+                  "&:last-child": { borderBottom: "none" },
+                }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    <Box sx={{ color: "#818cf8" }}>{icon}</Box>
+                    <Typography sx={{ fontSize: 14, color: "text.secondary" }}>{label}</Typography>
+                  </Box>
+                  <Typography sx={{ fontSize: 14, fontWeight: 500, color: "text.primary" }}>{value}</Typography>
                 </Box>
-                <Box className="p-3 mr-10 ml-10 bg-green-100 rounded-lg">
-                  <Typography variant="h5" fontWeight={600} color="info">{userData.tasksCompleted}</Typography>
-                  <Typography variant="caption">Completed</Typography>
-                </Box>
-                <Box className="p-3 mr-10 ml-10 bg-blue-100 rounded-lg">
-                  <Typography variant="h5" fontWeight={600} color="success">{totalTasks}</Typography>
-                  <Typography variant="caption">Total</Typography>
-                </Box>
-              </Box>
+              ))}
             </CardContent>
           </Card>
         </Box>
+
+        {/* Permissions Card */}
+        <Card sx={{ mb: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+              <Typography sx={{ fontWeight: 700, fontSize: 16, color: "text.primary" }}>
+                Permissions
+              </Typography>
+              {sectionEditBtn("permissions", "Edit Permissions")}
+            </Box>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {userData.permissions.map((perm) => (
+                <Chip key={perm} label={perm} size="small"
+                  onDelete={async () => {
+                    const updated = { ...userData, permissions: userData.permissions.filter((p) => p !== perm) };
+                    const saved = await updateUser(id, updated);
+                    setUserData(saved);
+                  }}
+                  deleteIcon={<CloseIcon sx={{ fontSize: "14px !important", color: "#a5b4fc !important", "&:hover": { color: "#f87171 !important" } }} />}
+                  sx={{
+                    bgcolor: "rgba(129,140,248,0.1)", color: "#a5b4fc",
+                    border: "1px solid rgba(129,140,248,0.2)",
+                    fontWeight: 500, fontSize: 12,
+                  }}
+                />
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Tasks Kanban Board */}
+        <Card>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+              <Typography sx={{ fontWeight: 700, fontSize: 16, color: "text.primary" }}>
+                Tasks
+              </Typography>
+              <Typography sx={{ fontSize: 12, color: "text.secondary", fontStyle: "italic" }}>
+                Drag to move between columns
+              </Typography>
+            </Box>
+            <TaskBoard tasks={userData.tasks} onTaskMove={handleTaskMove} />
+          </CardContent>
+        </Card>
       </Box>
 
       {/* Edit Modal */}
       <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          Edit User
-          <IconButton onClick={() => setModalOpen(false)}><CloseIcon /></IconButton>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 700, fontSize: 18 }}>
+          {editTitle}
+          <IconButton onClick={() => setModalOpen(false)} sx={{ color: "text.secondary" }}>
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
-        <Divider />
+        <Divider sx={{ borderColor: "rgba(148,163,184,0.1)" }} />
         <DialogContent sx={{ pt: 3 }}>
-          <EditUserForm user={userData} setUser={handleSave} onCancel={() => setModalOpen(false)} />
+          <EditUserForm user={userData} setUser={handleSave} onCancel={() => setModalOpen(false)} section={editSection} />
         </DialogContent>
       </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar open={snackOpen} autoHideDuration={3000} onClose={() => setSnackOpen(false)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
+        <Alert onClose={() => setSnackOpen(false)} severity="success" sx={{ borderRadius: 2, fontWeight: 500 }}>
+          User updated successfully!
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
